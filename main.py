@@ -8,6 +8,6 @@ if __name__ == '__main__':
     with open('credentials.json', 'r', encoding='utf8') as f:
         credentials = json.load(f)
 
-    vk_connection = VK(credentials['access_token'], credentials['app_id'])
+    vk_connection = VK(credentials['PersonalAccessToken'], credentials['AppID'])
     find_user = vk_connection.get_user_match_params()
     pprint(find_user)
