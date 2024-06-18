@@ -91,6 +91,7 @@ if __name__ == '__main__':
                     vk_keyboard.add_button('Следующий', VkKeyboardColor.PRIMARY)
                     vk_keyboard.add_button('Добавить в избранное', VkKeyboardColor.POSITIVE)
                     vk_keyboard.add_button('Закончить', VkKeyboardColor.NEGATIVE)
+                    # сюда надо передавать параметры age_from, age_to, city и sex
                     find_user = vk_connection.get_user_match_params()
                     for key, value in find_user.items():
                         send_message(event.user_id, value, vk_keyboard.get_keyboard())

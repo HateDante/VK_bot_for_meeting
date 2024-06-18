@@ -7,9 +7,9 @@ class VK:
     BASE_URL = 'https://api.vk.com/method/'
     BASE_VK_URL = 'https://vk.com/'
 
-    def __init__(self, access_token, id, version='5.199'):
+    def __init__(self, access_token, app_id, version='5.199'):
         self.token = access_token
-        self.id = f'id{id}'
+        self.id = f'id{app_id}'
         self.version = version
         self.params = {'access_token': self.token, 'v': self.version}
 
@@ -19,6 +19,10 @@ class VK:
         response = requests.get(f'{self.BASE_URL}users.get', params=params)
         return response.json()
 
+    # Здесь добавляем параметры в сам метод и дальше прокидываем их в params. Не забыть, что "city" - это идентификатор
+    # города, поэтому надо создать новый метод, который будет искать текстовое представление города и получать его
+    # идентификатор. Если идентификатор не найден, заново просить пользователя ввести город. Метод в Vk называется
+    # database.getCities (https://dev.vk.com/ru/method/database.getCities). Использовать параметр q.
     def get_user_match_params(self):
         find_user = {}
         photo_list = []
