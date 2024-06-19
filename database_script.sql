@@ -1,35 +1,26 @@
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    age INTEGER,
+    user_id INT UNIQUE,
+    age INT,
     gender VARCHAR,
     city VARCHAR
 );
 
 CREATE TABLE photos (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
+    user_id INT REFERENCES users(user_id),
     url VARCHAR,
-    likes INTEGER
+    likes INT
 );
 
 CREATE TABLE favorites (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    favorite_user_id INTEGER REFERENCES users(id)
+    user_id INT REFERENCES users(user_id),
+    favorite_user_id INT REFERENCES users(user_id)
 );
 
 CREATE TABLE blacklist (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    blacklisted_user_id INTEGER REFERENCES users(id)
+    user_id INT REFERENCES users(user_id),
+    blacklisted_user_id INT REFERENCES users(user_id)
 );
-
--- Получение трех самых популярных фотографий для всех пользователей
-WITH RankedPhotos AS (
-    SELECT *,
-           RANK() OVER (PARTITION BY user_id ORDER BY likes DESC) as rank
-    FROM photos
-)
-SELECT user_id, id, url, likes
-FROM RankedPhotos
-WHERE rank <= 3;
