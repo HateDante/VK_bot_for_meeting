@@ -13,10 +13,10 @@ class User(Base):
     id = sq.Column(sq.Integer, primary_key=True)
     user_id = sq.Column(sq.Integer, unique=True)
     age = sq.Column(sq.Integer)
-    gender = sq.Column(sq.String)
+    gender = sq.Column(sq.Integer)
     city = sq.Column(sq.String)
     photos = relationship('Photo', back_populates='user')
-    favorites = relationship('Favorite', foreign_keys='[Favorite.user_id]', back_populates='user')
+    favorites = relationship('Favorite', back_populates='user')
 
 
 class Photo(Base):
@@ -32,16 +32,15 @@ class Favorite(Base):
     __tablename__ = 'favorites'
     id = sq.Column(sq.Integer, primary_key=True)
     user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'))
-    favorite_user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'))
-    user = relationship('User', foreign_keys=[user_id], back_populates='favorites')
-    favorite_user = relationship('User', foreign_keys=[favorite_user_id], backref='favorited_by')
+    favorite_user_id = sq.Column(sq.Integer)
+    user = relationship('User', back_populates='favorites')
 
 
 class Blacklist(Base):
     __tablename__ = 'blacklist'
     id = sq.Column(sq.Integer, primary_key=True)
     user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'))
-    blacklisted_user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'))
+    blacklisted_user_id = sq.Column(sq.Integer)
 
 
 def create_session():
