@@ -1,26 +1,29 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    user_id INT UNIQUE,
-    age INT,
-    gender VARCHAR,
-    city VARCHAR
+    user_id INTEGER UNIQUE NOT NULL,
+    age INTEGER NOT NULL,
+    gender INTEGER NOT NULL,
+    city VARCHAR NOT NULL
 );
 
-CREATE TABLE photos (
+CREATE TABLE IF NOT EXISTS photos (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(user_id),
-    url VARCHAR,
-    likes INT
+    user_id INTEGER NOT NULL,
+    url VARCHAR NOT NULL,
+    likes INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
 
-CREATE TABLE favorites (
+CREATE TABLE IF NOT EXISTS favorites (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(user_id),
-    favorite_user_id INT REFERENCES users(user_id)
+    user_id INTEGER NOT NULL,
+    favorite_user_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
 
-CREATE TABLE blacklist (
+CREATE TABLE IF NOT EXISTS blacklist (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(user_id),
-    blacklisted_user_id INT REFERENCES users(user_id)
+    user_id INTEGER NOT NULL,
+    blacklisted_user_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
