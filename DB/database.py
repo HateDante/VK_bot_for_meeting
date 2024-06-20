@@ -56,15 +56,20 @@ def create_tables(engine):
 
 
 def add_user(session, user_id, age, gender, city):
-    new_user = User(user_id=user_id, age=age, gender=gender, city=city)
-    session.add(new_user)
-    try:
-        session.commit()
-        return new_user.user_id
-    except Exception as e:
-        session.rollback()
-        print(f'Ошибка при добавлении пользователя: {e}')
-        raise e
+    existing_user = session.query(User).filter_by(user_id=user_id).first()
+    if existing_user is None:
+        new_user = User(user_id=user_id, age=age, gender=gender, city=city)
+        session.add(new_user)
+        try:
+            session.commit()
+            return new_user.user_id
+        except Exception as e:
+            session.rollback()
+            print(f'Ошибка при добавлении пользователя: {e}')
+            raise e
+    else:
+        # Если пользователь уже существует, возвращаем его user_id
+        return existing_user.user_id
 
 
 def add_favorite_user(session, user_id, favorite_user_id):
@@ -84,6 +89,11 @@ def add_photos(session, user_id, photo_urls):
         photo = Photo(user_id=user_id, url=url)
         session.add(photo)
     session.commit()
+
+
+def get_favorites(session, user_id):
+    favorites = session.query(Favorite).filter_by(user_id=user_id).all()
+    return favorites
 
 
 def add_to_blacklist(session, user_id, blacklisted_user_id):
