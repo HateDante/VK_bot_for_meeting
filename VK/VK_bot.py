@@ -41,6 +41,7 @@ def bot_start():
     longpoll = VkLongPoll(vk_session)
 
     vk_connection = VK(credentials['PersonalAccessToken'], credentials['AppID'])
+    session = create_session()
 
     for event in longpoll.listen():
         if not(event.from_user and not event.from_me):
@@ -100,9 +101,12 @@ def bot_start():
                 next_step = ''
         elif ((event_text == 'Начать поиск' or event_text == 'Следующий')
               and age_from != 0 and city != '' and sex != 0):
+            add_user(session, event.user_id, age_from, sex, city)
             vk_keyboard = VkKeyboard()
             vk_keyboard.add_button('Следующий', VkKeyboardColor.PRIMARY)
             vk_keyboard.add_button('Добавить в избранное', VkKeyboardColor.POSITIVE)
+            vk_keyboard.add_line()
+            vk_keyboard.add_button('Избранное', VkKeyboardColor.SECONDARY)
             vk_keyboard.add_button('Закончить', VkKeyboardColor.NEGATIVE)
             find_user = vk_connection.search_user(age_from, age_to, city, sex)
             find_user_params = vk_connection.get_user_params(find_user)
@@ -113,13 +117,30 @@ def bot_start():
                 else:
                     send_message(event.user_id, vk_session, value, vk_keyboard.get_keyboard())
         elif event_text == 'Добавить в избранное':
-            f = 0
-            # find_user_id = find_user[id]
-            # photos_list = find_user_params['photos']
-            # дальше запись в БД
+            try:
+                find_user_id = find_user['id']
+                photos_list = find_user_params['photos']
+                add_favorite_user(session, event.user_id, find_user_id)
+                add_photos(session, event.user_id, photos_list)
+                text_msg = 'Пользователь и его фотографии добавлены в избранное.'
+            except Exception as e:
+                text_msg = f'Не удалось добавить пользователя в избранное: {e}'
+            send_message(event.user_id, vk_session, text_msg)
+        elif event_text == 'Избранное':
+            favorites_list = get_favorites(session, event.user_id)
+            if favorites_list:
+                text_msg = 'Список избранных пользователей:\n'
+                for favorite in favorites_list:
+                    user_info = vk_connection.get_user_info(favorite.favorite_user_id)
+                    text_msg += (f"{user_info['response'][0]['first_name']} {user_info['response'][0]['last_name']} - "
+                                 f"{vk_connection.BASE_VK_URL}id{favorite.favorite_user_id}\n")
+                send_message(event.user_id, vk_session, text_msg)
+            else:
+                send_message(event.user_id, vk_session, 'Список избранных пользователей пока пуст.')
         else:
             vk_keyboard = VkKeyboard(True)
             vk_keyboard.add_button('Погнали', VkKeyboardColor.POSITIVE)
             text_msg = 'Жми кнопку \'Погнали\' чтобы начать поиск людей'
             send_message(event.user_id, vk_session, text_msg, vk_keyboard.get_keyboard())
 
+    session.close()
