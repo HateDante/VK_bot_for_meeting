@@ -68,7 +68,6 @@ def add_user(session, user_id, age, gender, city):
             print(f'Ошибка при добавлении пользователя: {e}')
             raise e
     else:
-        # Если пользователь уже существует, возвращаем его user_id
         return existing_user.user_id
 
 
