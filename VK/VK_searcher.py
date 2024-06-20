@@ -48,12 +48,12 @@ class VK:
 
         return find_user
 
-    # def get_user_info(self, user_id):
-    #     params = {'user_ids': user_id}
-    #     params.update(self.params)
-    #     response = requests.get(f'{self.BASE_URL}users.get', params=params)
-    #
-    #     return response.json()
+    def get_user_info(self, user_id):
+        params = {'user_ids': user_id}
+        params.update(self.params)
+        response = requests.get(f'{self.BASE_URL}users.get', params=params)
+
+        return response.json()
 
     def search_user(self, age_from, age_to, city, sex):
         city_id = self.get_city_id(city)
@@ -66,4 +66,3 @@ class VK:
         random_user = find_users[randrange(0, len(find_users) - 1)]
 
         return random_user
-
