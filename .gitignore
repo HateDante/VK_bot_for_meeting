@@ -1,1 +1,5 @@
-credentials.json
+.idea/
+.venv/
+.env
+VK/__pycache__/
+DB/__pycache__/

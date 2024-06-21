@@ -55,11 +55,11 @@ class VK:
 
         return response.json()
 
-    def search_user(self, age_from, age_to, city, sex):
-        city_id = self.get_city_id(city)
-        params = {'age_from': age_from, 'city': city_id, 'sex': sex}
-        if age_to != 0:
-            params['age_to'] = age_to
+    def search_user(self, user_params):
+        city_id = self.get_city_id(user_params['city'])
+        params = {'age_from': user_params['age_from'], 'city': city_id, 'sex': user_params['sex']}
+        if user_params['age_to'] != 0:
+            params['age_to'] = user_params['age_to']
         params.update(self.params)
         response = requests.get(f'{self.BASE_URL}users.search', params=params)
         find_users = response.json()['response']['items']

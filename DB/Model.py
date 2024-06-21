@@ -44,10 +44,10 @@ class Blacklist(Base):
 
 
 def create_session():
-    DSN = os.getenv('DATABASE_URL')
-    engine = create_engine(DSN)
-    Session = sessionmaker(bind=engine)
-    return Session()
+    dsn = os.getenv('DATABASE_URL')
+    engine = create_engine(dsn)
+    session = sessionmaker(bind=engine)
+    return session()
 
 
 def create_tables(engine):
@@ -55,10 +55,11 @@ def create_tables(engine):
     Base.metadata.create_all(engine)
 
 
-def add_user(session, user_id, age, gender, city):
+def add_user(session, user_id, user_params):
     existing_user = session.query(User).filter_by(user_id=user_id).first()
     if existing_user is None:
-        new_user = User(user_id=user_id, age=age, gender=gender, city=city)
+        new_user = User(user_id=user_id, age=user_params['age_from'], gender=user_params['sex'],
+                        city=user_params['city'])
         session.add(new_user)
         try:
             session.commit()
