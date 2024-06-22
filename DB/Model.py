@@ -9,6 +9,7 @@ Base = declarative_base()
 
 
 class User(Base):
+    """Модель пользователя"""
     __tablename__ = 'users'
     id = sq.Column(sq.Integer, primary_key=True)
     user_id = sq.Column(sq.Integer, unique=True)
@@ -20,6 +21,7 @@ class User(Base):
 
 
 class Photo(Base):
+    """Модель фото"""
     __tablename__ = 'photos'
     id = sq.Column(sq.Integer, primary_key=True)
     user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'))
@@ -29,6 +31,7 @@ class Photo(Base):
 
 
 class Favorite(Base):
+    """Модель избранного"""
     __tablename__ = 'favorites'
     id = sq.Column(sq.Integer, primary_key=True)
     user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'))
@@ -37,6 +40,7 @@ class Favorite(Base):
 
 
 class Blacklist(Base):
+    """Модель черного списка"""
     __tablename__ = 'blacklist'
     id = sq.Column(sq.Integer, primary_key=True)
     user_id = sq.Column(sq.Integer, sq.ForeignKey('users.user_id'))
@@ -44,6 +48,7 @@ class Blacklist(Base):
 
 
 def create_session():
+    """Создание сессии"""
     dsn = os.getenv('DATABASE_URL')
     engine = create_engine(dsn)
     session = sessionmaker(bind=engine)
@@ -51,11 +56,13 @@ def create_session():
 
 
 def create_tables(engine):
+    """Создание таблиц"""
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
 
 def add_user(session, user_id, user_params):
+    """Добавление пользователя в БД"""
     existing_user = session.query(User).filter_by(user_id=user_id).first()
     if existing_user is None:
         new_user = User(user_id=user_id, age=user_params['age_from'], gender=user_params['sex'],
@@ -73,6 +80,7 @@ def add_user(session, user_id, user_params):
 
 
 def add_favorite_user(session, user_id, favorite_user_id):
+    """Добавление пользователя в избранное"""
     favorite = Favorite(user_id=user_id, favorite_user_id=favorite_user_id)
     session.add(favorite)
 
@@ -85,6 +93,7 @@ def add_favorite_user(session, user_id, favorite_user_id):
 
 
 def add_photos(session, user_id, photo_urls):
+    """Добавление фото избранного пользователя в БД"""
     for url in photo_urls:
         photo = Photo(user_id=user_id, url=url)
         session.add(photo)
@@ -92,11 +101,13 @@ def add_photos(session, user_id, photo_urls):
 
 
 def get_favorites(session, user_id):
+    """Получение списка избранных пользователей"""
     favorites = session.query(Favorite).filter_by(user_id=user_id).all()
     return favorites
 
 
 def add_to_blacklist(session, user_id, blacklisted_user_id):
+    """Добавление пользователя в черный список"""
     blacklist = Blacklist(user_id=user_id, blacklisted_user_id=blacklisted_user_id)
     session.add(blacklist)
     session.commit()
