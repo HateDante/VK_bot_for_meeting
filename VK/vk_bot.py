@@ -8,13 +8,20 @@ from VK.vk_searcher import VK
 
 
 def bot_start():
+    """Запуск бота для взаимодействия пользователем в социальной сети VK.
+     Бот использует VK API для получения сообщений от пользователей, обрабатывает их,
+     и выполняет соответствующие действия.
+        Args:
+            None. Параметры и токены используются из переменных окружения.
+        Returns:
+            None. Функция выполняется до тех пор, пока пользователь не нажмет кнопку "Закончить"."""
     user_params = {'age_from': 0, 'age_to': 0, 'city': '', 'sex': 0}
     find_user = {'user_data': [], 'user_params': {}}
     current_step = ''
 
-    vk_session = vk_api.VkApi(token=os.getenv('GroupServiceToken'))
+    vk_session = vk_api.VkApi(token=os.getenv('GROUPSERVICETOKEN'))
     longpoll = VkLongPoll(vk_session)
-    vk_connection = VK(os.getenv('PersonalAccessToken'), os.getenv('AppID'))
+    vk_connection = VK(os.getenv('PERSONALACCESSTOKEN'), os.getenv('APPID'))
     session = create_session()
 
     for event in longpoll.listen():
