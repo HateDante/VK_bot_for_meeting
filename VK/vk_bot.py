@@ -41,10 +41,10 @@ class VKBOT:
             user_id = event.user_id
             request = event.text
 
-            if current_step != '' and request != 'Закончить':
-                current_step = self.input_params_event(user_id, request, current_step)
-            elif request == 'Закончить':
+            if request == 'Закончить':
                 current_step = self.stop_event(user_id)
+            elif current_step != '':
+                current_step = self.input_params_event(user_id, request, current_step)
             elif request == 'Погнали':
                 current_step = self.start_event(user_id)
             elif (request == 'Начать поиск' or request == 'Следующий') and self.user_params_fulfill():
