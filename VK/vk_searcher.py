@@ -8,9 +8,8 @@ class VK:
     BASE_URL = 'https://api.vk.com/method/'
     BASE_VK_URL = 'https://vk.com/'
 
-    def __init__(self, access_token, app_id, version='5.199'):
+    def __init__(self, access_token, version='5.199'):
         self.token = access_token
-        self.id = app_id
         self.version = version
         self.params = {'access_token': self.token, 'v': self.version}
 
