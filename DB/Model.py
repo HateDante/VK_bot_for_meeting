@@ -92,10 +92,12 @@ def add_favorite_user(session, user_id, favorite_user_id):
         raise e
 
 
-def add_photos(session, user_id, photo_urls):
+def add_photos(session, user_id, photo_list):
     """Добавление фото избранного пользователя в БД"""
-    for url in photo_urls:
-        photo = Photo(user_id=user_id, url=url)
+    base_url = 'https://vk.com/'
+    for photo_with_likes in photo_list:
+        url = f'{base_url}photo{user_id}_{photo_with_likes[0]}'
+        photo = Photo(user_id=user_id, url=url, likes=photo_with_likes[1])
         session.add(photo)
     session.commit()
 

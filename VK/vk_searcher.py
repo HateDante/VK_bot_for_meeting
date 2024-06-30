@@ -42,11 +42,19 @@ class VK:
         Returns:
             list: Список словарей с информацией о фотографиях пользователя
         """
-        params = {'owner_id': owner_id, 'album_id': album_id, 'extended': 0, 'count': count}
+        params = {'owner_id': owner_id, 'album_id': album_id, 'extended': 1, 'photo_sizes': 1}
         params.update(self.params)
         response = requests.get(f'{self.BASE_URL}photos.get', params=params)
+        user_photos = response.json()['response']['items']
+        photos_with_likes = {}
 
-        return response.json()['response']['items']
+        for user_photo in user_photos:
+            photos_with_likes[user_photo['id']] = user_photo['likes']['count']
+
+        user_photo_list = sorted(photos_with_likes.items(), key=lambda item: item[1], reverse=True)
+        photo_list_count = user_photo_list[0:count]
+
+        return photo_list_count
 
     def get_user_params(self, user_with_params):
         """" Получение необходимых параметров пользователя
@@ -57,16 +65,10 @@ class VK:
             dict: Словарь с информацией о пользователе.
         """
         find_user = {}
-        photo_list = []
         find_user_photos = self.get_photos(user_with_params['id'])
-
-        for current_photo in find_user_photos:
-            size_params = current_photo['sizes'][-1]['url']
-            photo_list.append(size_params)
-
         find_user['name_and_last_name'] = f"{user_with_params['first_name']} {user_with_params['last_name']}"
         find_user['urs'] = f"{self.BASE_VK_URL}id{user_with_params['id']}"
-        find_user['photos'] = photo_list
+        find_user['photos'] = find_user_photos
 
         return find_user
 
@@ -100,5 +102,11 @@ class VK:
         response = requests.get(f'{self.BASE_URL}users.search', params=params)
         find_users = response.json()['response']['items']
         random_user = find_users[randrange(0, len(find_users) - 1)]
+
+        while True:
+            if not random_user['is_closed']:
+                break
+            else:
+                random_user = find_users[randrange(0, len(find_users) - 1)]
 
         return random_user

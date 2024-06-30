@@ -5,6 +5,7 @@ import vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkLongPoll, VkEventType
 from DB.Model import create_session, add_user, add_favorite_user, add_photos, get_favorites
+from VK.VK_bot_keyboard import get_vk_keyboard
 from VK.vk_searcher import VK
 
 
@@ -14,10 +15,10 @@ class VKBOT:
             group_token(str) - ключ доступа группы VK
             personal_token(str) - ключ доступа пользователя VK"""
 
-    def __init__(self, group_token=os.getenv('GROUPSERVICETOKEN'), personal_token=os.getenv('PERSONALACCESSTOKEN')):
+    def __init__(self, group_token=os.getenv('GroupServiceToken'), personal_token=os.getenv('PersonalAccessToken')):
         self.user_params = {'age_from': 0, 'age_to': 0, 'city': '', 'sex': 0}
         self.find_user = {'user_data': {}, 'user_params': {}}
-        self.vk_session = vk_api.VkApi(group_token)
+        self.vk_session = vk_api.VkApi(token=group_token)
         self.vk_connection = VK(personal_token)
         self.session = create_session()
 
@@ -53,20 +54,29 @@ class VKBOT:
                 self.add_to_favorite(user_id)
             elif request == 'Избранное':
                 self.print_favorite_list(user_id)
+            elif request == 'test':
+                self.user_params['age_from'] = 25
+                self.user_params['age_to'] = 25
+                self.user_params['city'] = 'Санкт-Петербург'
+                self.user_params['sex'] = 1
+                self.start_search(user_id)
             else:
                 self.prepare_to_start(user_id)
 
         self.session.close()
 
-    def send_message(self, user_id, text='', json_keyboard=None):
+    def send_message(self, user_id, text='', json_keyboard=None, attachment=None):
         """Отправка сообщения пользователю"""
         values = {
             'user_id': user_id,
-            'random_id': randrange(10 ** 7),
-            'message': text
+            'random_id': randrange(10 ** 7)
         }
         if json_keyboard is not None:
             values['keyboard'] = json_keyboard
+        if attachment is not None:
+            values.update(attachment)
+        else:
+            values['message'] = text
 
         self.vk_session.method('messages.send', values)
 
@@ -79,8 +89,8 @@ class VKBOT:
         Returns:
             str: Пустая строка, означающая завершение работы бота."""
         text_msg = 'На сегодня закончили. Удачи в самостоятельном поиске, человек!'
-        vk_keyboard = VkKeyboard()
-        self.send_message(user_id, text_msg, vk_keyboard.get_empty_keyboard())
+        # vk_keyboard = VkKeyboard()
+        self.send_message(user_id, text_msg, VkKeyboard().get_empty_keyboard())
         current_step = ''
         return current_step
 
@@ -92,9 +102,7 @@ class VKBOT:
             str: Сообщение о необходимости ввести возраст пользователя."""
         text_msg = 'Погоди, сначала нужно указать желаемый возраст в формате \'от\'-\'до\'' \
                    ' (например, 25-45) либо точный возраст числом (например, 18)'
-        vk_keyboard = VkKeyboard()
-        vk_keyboard.add_button('Закончить', VkKeyboardColor.NEGATIVE)
-        self.send_message(user_id, text_msg, vk_keyboard.get_keyboard())
+        self.send_message(user_id, text_msg, get_vk_keyboard('end_buttons'))
         current_step = 'input age'
         return current_step
 
@@ -154,9 +162,7 @@ class VKBOT:
             else:
                 text_msg = 'У тебя получилось! Теперь жми кнопку "Начать поиск" чтобы, собственно, его начать.' \
                            'Удачи, человек!'
-                vk_keyboard = VkKeyboard(True)
-                vk_keyboard.add_button('Начать поиск', VkKeyboardColor.POSITIVE)
-                self.send_message(user_id, text_msg, vk_keyboard.get_keyboard())
+                self.send_message(user_id, text_msg, get_vk_keyboard('start_buttons'))
                 current_step = ''
         return current_step
 
@@ -169,20 +175,22 @@ class VKBOT:
         Returns:
             None. Функция ничего не возвращает, но выводит ссылки на профиль и фото найденных пользователей."""
         add_user(self.session, user_id, self.user_params)
-        vk_keyboard = VkKeyboard()
-        vk_keyboard.add_button('Следующий', VkKeyboardColor.PRIMARY)
-        vk_keyboard.add_button('Добавить в избранное', VkKeyboardColor.POSITIVE)
-        vk_keyboard.add_line()
-        vk_keyboard.add_button('Избранное', VkKeyboardColor.SECONDARY)
-        vk_keyboard.add_button('Закончить', VkKeyboardColor.NEGATIVE)
+        vk_keyboard = get_vk_keyboard('find_buttons')
         self.find_user['user_data'] = self.vk_connection.search_user(self.user_params)
         self.find_user['user_params'] = self.vk_connection.get_user_params(self.find_user['user_data'])
+        find_user_id = self.find_user['user_data']['id']
         for key, value in self.find_user['user_params'].items():
             if key == 'photos':
+                attachment = {}
+                photo_list = []
+
                 for photo in value:
-                    self.send_message(user_id, photo, vk_keyboard.get_keyboard())
+                    photo_list.append(f'photo{find_user_id}_{photo[0]}')
+
+                attachment['attachment'] = ','.join(photo_list)
+                self.send_message(user_id, json_keyboard=vk_keyboard, attachment=attachment)
             else:
-                self.send_message(user_id, value, vk_keyboard.get_keyboard())
+                self.send_message(user_id, value, json_keyboard=vk_keyboard)
 
     def add_to_favorite(self, user_id):
         """Добавление пользователя в избранное.
@@ -198,7 +206,7 @@ class VKBOT:
             find_user_id = self.find_user['user_data']['id']
             photos_list = self.find_user['user_params']['photos']
             add_favorite_user(self.session, user_id, find_user_id)
-            add_photos(self.session, user_id, photos_list)
+            add_photos(self.session, find_user_id, photos_list)
             text_msg = 'Пользователь и его фотографии добавлены в избранное.'
         except Exception as e:
             text_msg = f'Не удалось добавить пользователя в избранное: {e}'
@@ -220,7 +228,7 @@ class VKBOT:
                              f"{self.vk_connection.BASE_VK_URL}id{favorite.favorite_user_id}\n")
         else:
             text_msg = 'Список избранных пользователей пока пуст.'
-            self.send_message(user_id, text_msg)
+        self.send_message(user_id, text_msg)
 
     def prepare_to_start(self, user_id):
         """Подготовка к началу поиска.
@@ -230,7 +238,5 @@ class VKBOT:
         Returns:
             None: Функция ничего не возвращает, но отправляет пользователю сообщение и создает
             кнопку для начала поиска."""
-        vk_keyboard = VkKeyboard(True)
-        vk_keyboard.add_button('Погнали', VkKeyboardColor.POSITIVE)
-        text_msg = 'Жми кнопку \'Погнали\' чтобы начать поиск людей'
-        self.send_message(user_id, text_msg, vk_keyboard.get_keyboard())
+        text_msg = 'Жми кнопку "Погнали" чтобы начать поиск людей'
+        self.send_message(user_id, text_msg, get_vk_keyboard('prepare_buttons'))
